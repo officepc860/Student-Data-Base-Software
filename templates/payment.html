@@ -22,6 +22,7 @@
 
     <div class="container py-4">
         <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary mb-3"> ⮜Back</a>
+        
         <h3 class="mb-4">💳 Payment Management</h3>         
 
         <!-- Excel Import Form -->
@@ -70,17 +71,17 @@
                 <a href="{{ url_for('export_payment_pdf') }}?batch={{ selected_batch or '' }}&status={{ selected_status or '' }}" target="_blank" class="btn btn-outline-danger w-100"> 📄 View PDF</a>
             </div>
             <div class="col-md-2 mb-2">
-                <a href="{{ url_for('export_payment_pdf') }}?batch={{ selected_batch or '' }}&status={{ selected_status or '' }}&download=1" class="btn btn-outline-success w-100"> 🡻 Download PDF</a>
+                <a href="{{ url_for('export_payment_pdf') }}?batch={{ selected_batch or '' }}&status={{ selected_status or '' }}&download=1" class="btn btn-outline-success w-100"> ⬇️ Download PDF</a>
             </div>
 
             <div class="col-md-2 mb-2">
                 <a href="{{ url_for('view_payment_excel') }}?batch={{ selected_batch or '' }}&status={{ selected_status or '' }}" target="_blank" class="btn btn-outline-primary w-100"> 📄 View Excel</a>
             </div>
             <div class="col-md-2 mb-2">
-                <a href="{{ url_for('export_payment_excel') }}?batch={{ selected_batch or '' }}&status={{ selected_status or '' }}&download=1" class="btn btn-outline-success w-100"> 🡻 Download Excel</a>
+                <a href="{{ url_for('export_payment_excel') }}?batch={{ selected_batch or '' }}&status={{ selected_status or '' }}&download=1" class="btn btn-outline-success w-100"> ⬇️ Download Excel</a>
             </div>
             <div class="col-md-2 mb-2">
-                <a href="{{ url_for('payment') }}" class="btn btn-outline ms-2">🗘 Refresh</a>
+                <a href="{{ url_for('payment') }}" class="btn btn-outline ms-2"> Refresh</a>
             </div>
         </form>
 
@@ -105,20 +106,66 @@
                         <label>Date:</label>
                         <input type="date" name="date" value="{{ payment.date or '' }}" class="form-control" required>
                     </div>
-                    <div class="col-md-2">
-                        <label>Memo No:</label>
-                        <input type="text" name="memo_no" value="{{ payment.memo_no or '' }}" class="form-control"
-                            onchange="window.location.href='{{ url_for('payment') }}?roll={{ roll }}&memo_no=' + this.value + '&batch={{ selected_batch }}&status={{ selected_status }}'" required>
-                    </div>
 
                     <div class="col-md-2">
-                        <label>Receipt No:</label>
-                        <input type="text" name="receipt_no" class="form-control" value="{{ payment.receipt_no }}">
+                        <label>Memo No:</label>
+                        <input type="text" name="memo_no" id="memo_no" value="{{ payment.memo_no or '' }}" class="form-control" required>
                     </div>
                     <div class="col-md-2">
-                        <label>Course:</label>
-                        <input type="text" name="course" value="{{ payment.course or '' }}" class="form-control">
+                        <label>Receipt No:</label>
+                        <input type="text" name="receipt_no" id="receipt_no" class="form-control" value="{{ payment.receipt_no }}" required>
                     </div>
+
+
+<!-- Course Field -->
+<div class="col-md-2">
+    <label>Course:</label>
+    <select name="course" id="courseSelect" class="form-select" onchange="toggleCustomCourse()" required>
+        <option value="">-- Select Course --</option>
+        <option value="1st Time Regular Batch" {% if payment.course == '1st Time Regular Batch' %}selected{% endif %}>1st Time Regular Batch</option>
+        <option value="1st Time Exam Batch" {% if payment.course == '1st Time Exam Batch' %}selected{% endif %}>1st Time Exam Batch</option>
+        <option value="2nd Time Regular Batch" {% if payment.course == '2nd Time Regular Batch' %}selected{% endif %}>2nd Time Regular Batch</option>
+        <option value="2nd Time Exam Batch" {% if payment.course == '2nd Time Exam Batch' %}selected{% endif %}>2nd Time Exam Batch</option>
+        <option value="Model Test Batch" {% if payment.course == 'Model Test Batch' %}selected{% endif %}>Model Test Batch</option>
+        <option value="Math Programm" {% if payment.course == 'Math Programm' %}selected{% endif %}>Math Programm</option>
+        <option value="Academic Regular Batch" {% if payment.course == 'Academic Regular Batch' %}selected{% endif %}>Academic Regular Batch</option>
+        <option value="Academic Exam Batch" {% if payment.course == 'Academic Exam Batch' %}selected{% endif %}>Academic Exam Batch</option>
+        <option value="Academic Model Test Batch" {% if payment.course == 'Academic Model Test Batch' %}selected{% endif %}>Academic Model Test Batch</option>
+        <option value="custom" {% if payment.course not in [
+            '1st Time Regular Batch',
+            '1st Time Exam Batch',
+            '2nd Time Regular Batch',
+            '2nd Time Exam Batch',
+            'Model Test Batch',
+            'Math Programm'
+            'Academic Regular Batch',
+		    'Academic Exam Batch',
+		    'Academic Model Test Batch'
+        ] %}selected{% endif %}> Other </option>
+    </select>
+
+    <!-- Custom Input -->
+    <input type="text" name="custom_course" id="customCourseInput"
+           class="form-control mt-2"
+           placeholder="Enter custom course"
+           {% if payment.course not in [
+                '1st Time Regular Batch',
+                '1st Time Exam Batch',
+                '2nd Time Regular Batch',
+                '2nd Time Exam Batch',
+                'Model Test Batch',
+                'Math Programm'
+                'Academic Regular Batch',
+		        'Academic Exam Batch',
+		        'Academic Model Test Batch'
+           ] %}
+               value="{{ payment.course }}"
+           {% else %}
+               style="display: none;"
+           {% endif %}
+    >
+</div>
+
                     <div class="col-md-2">
                         <label>Total Payment:</label>
                         <input type="number" name="total_payment" value="{{ payment.total_payment }}" class="form-control" required>
@@ -128,12 +175,12 @@
                         <input type="number" name="previous_payment" value="{{ payment.previous_payment }}" class="form-control">
                     </div>
                     <div class="col-md-2">
-                        <label>New Payment:</label>
-                        <input type="number" name="new_payment" value="0" class="form-control border-success text-dark" required>
-                    </div>
-                    <div class="col-md-2">
                         <label>Discount:</label>
                         <input type="number" name="discount" value="{{ payment.discount }}" class="form-control">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="text-success">New Payment:</label>
+                        <input type="number" name="new_payment" value="0" class="form-control border-success text-dark" required>
                     </div>
                     <div class="col-md-2">
                         <label>Due:</label>
@@ -211,34 +258,74 @@
 document.addEventListener('DOMContentLoaded', function () {
     const memoInput = document.getElementById('memo_no');
     const receiptInput = document.getElementById('receipt_no');
-    const rollInput = document.querySelector('input[name="roll"]');
 
-    memoInput.addEventListener('change', function () {
-        const memo = this.value.trim();
-        const roll = rollInput.value.trim();
-        if (memo.length < 2 || !roll) {
+    function fetchNextReceipt(memo) {
+        if (!memo || memo.length < 1) {
             receiptInput.value = '';
             return;
         }
 
-        fetch(`/get_next_receipt_no?memo_no=${encodeURIComponent(memo)}&roll=${encodeURIComponent(roll)}`)
+        fetch(`/get_next_receipt_no?memo_no=${encodeURIComponent(memo)}`)
             .then(res => res.json())
             .then(data => {
-                if (data.status === 'error') {
-                    alert(data.message);
-                    receiptInput.value = '';
-                } else {
+                if (data.status === 'success') {
                     receiptInput.value = data.receipt_no;
+                } else {
+                    receiptInput.value = '';
+                    alert(data.message);
                 }
             })
-            .catch(e => {
-                console.error('Fetch error:', e);
-                alert('Error fetching receipt number');
+            .catch(err => {
+                console.error(err);
+                alert('Failed to fetch receipt number');
             });
+    }
+
+    // On page load, auto trigger if memo already present
+    if (memoInput.value.trim().length > 0) {
+        fetchNextReceipt(memoInput.value.trim());
+    }
+
+    // On memo input change
+    memoInput.addEventListener('change', function () {
+        fetchNextReceipt(this.value.trim());
     });
 });
 </script>
 
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+
+
+<script>
+function toggleCustomCourse() {
+    const select = document.getElementById('courseSelect');
+    const input = document.getElementById('customCourseInput');
+
+    if (select.value === 'custom') {
+        input.style.display = 'block';
+        input.setAttribute('required', 'required');
+    } else {
+        input.style.display = 'none';
+        input.removeAttribute('required');
+        input.value = '';
+    }
+}
+</script>
+
+
+<!-- Right-Aligned Delete All Payments Button -->
+<div class="d-flex justify-content-end mt-3">
+    <form action="{{ url_for('delete_all_payments') }}" method="POST">
+        <div class="input-group" style="max-width: 400px;">
+            <input type="password" name="password" class="form-control" placeholder="Confirm Password" required>
+            <button type="submit" class="btn btn-outline-danger" onclick="return confirm('Are you sure to delete ALL payments?')">
+                🗑️ Delete All Payments
+            </button>
+        </div>
+    </form>
+</div>
+
 </body>
 </html>
