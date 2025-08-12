@@ -1,17 +1,16 @@
 import uuid
+import os  # ✅ Add this line
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_migrate import Migrate
 from models import db, User, Student, Payment, NewPayment
 
-
 app = Flask(__name__)
 app.secret_key = 'your_secret_key_here'
 
-
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:1234@localhost/studentdb'
+# ✅ Use environment variable for DB URI
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
 
 db.init_app(app)
 migrate = Migrate(app, db)
